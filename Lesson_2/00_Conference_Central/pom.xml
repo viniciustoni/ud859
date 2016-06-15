@@ -11,7 +11,7 @@
 
     <properties>
         <appengine.app.version>1</appengine.app.version>
-        <appengine.target.version>1.9.21</appengine.target.version>
+        <appengine.target.version>1.9.38</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -101,6 +101,21 @@
                 <version>${appengine.target.version}</version>
                 <configuration>
                     <enableJarClasses>false</enableJarClasses>
+                    <address>0.0.0.0</address>
+                    
+                    <jvmFlags>
+                            <!-- Enables remote debug -->
+                            <jvmFlag>-Xdebug</jvmFlag>
+                            <jvmFlag>-agentlib:jdwp=transport=dt_socket,address=8887,server=y,suspend=n</jvmFlag>
+
+                            <!-- JVM Memory -->
+                            <jvmFlag>-Xmx512m</jvmFlag>
+
+                            <!-- Timezone -->
+                            <jvmFlag>-Dappengine.user.timezone=UTC</jvmFlag>
+                            <jvmFlag>-Dfile.encoding=UTF-8</jvmFlag>
+
+                        </jvmFlags>
                 </configuration>
                 <executions>
                     <execution>

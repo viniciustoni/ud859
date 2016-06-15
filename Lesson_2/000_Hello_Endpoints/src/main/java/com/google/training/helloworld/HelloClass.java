@@ -9,6 +9,10 @@ public class HelloClass {
     public HelloClass (String name) {
         this.message = "Hello " + name + "!";
     }
+    
+    public HelloClass (final String name, final String period) {
+        this.message = "Good " + period + " " + name + "!";
+    }
 
     public String getMessage() {
         return message;
