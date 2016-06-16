@@ -3,6 +3,7 @@ package com.google.devrel.training.conference.spi;
 import static com.google.devrel.training.conference.service.OfyService.factory;
 import static com.google.devrel.training.conference.service.OfyService.ofy;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,13 +23,17 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.users.User;
 import com.google.devrel.training.conference.Constants;
+import com.google.devrel.training.conference.converter.SessionConverter;
 import com.google.devrel.training.conference.domain.Announcement;
 import com.google.devrel.training.conference.domain.Conference;
 import com.google.devrel.training.conference.domain.Profile;
+import com.google.devrel.training.conference.domain.Session;
+import com.google.devrel.training.conference.ennumerated.TypeOfSession;
 import com.google.devrel.training.conference.form.ConferenceForm;
 import com.google.devrel.training.conference.form.ConferenceQueryForm;
 import com.google.devrel.training.conference.form.ProfileForm;
 import com.google.devrel.training.conference.form.ProfileForm.TeeShirtSize;
+import com.google.devrel.training.conference.form.SessionForm;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.cmd.Query;
@@ -521,4 +526,68 @@ public class ConferenceApi {
 		return new WrappedBoolean(result.getResult());
 	}
 
+	@ApiMethod(name = "createSession", path = "createSession", httpMethod = HttpMethod.PUT)
+	public Session createSession(final User user, final SessionForm sessionForm, @Named("websafeConferenceKey") final String websafeConferenceKey) throws UnauthorizedException, NotFoundException {
+
+		// If not signed in, throw a 401 error.
+		if (user == null) {
+			throw new UnauthorizedException("Authorization required");
+		}
+		
+		final Session session = SessionConverter.converterToSessionFromSessionForm(sessionForm, websafeConferenceKey);
+		
+		ofy().save().entities(session).now();
+		
+		return session;
+		
+	}
+	
+	@ApiMethod(name = "getSessionBySpeaker", path = "getSessionBySpeaker", httpMethod = HttpMethod.GET)
+	public Collection<Session> getSessionBySpeaker(final User user, @Named("speaker") final String speaker) throws UnauthorizedException, NotFoundException {
+
+		// If not signed in, throw a 401 error.
+		if (user == null) {
+			throw new UnauthorizedException("Authorization required");
+		}
+		
+		Query<Session> query = ofy().load().type(Session.class).order("sessionName");
+		query.filter("speaker =", speaker);
+		
+		return query.list();
+		
+	}
+	
+	@ApiMethod(name = "getConferenceSessions", path = "getConferenceSessions", httpMethod = HttpMethod.GET)
+	public Collection<Session> getConferenceSessions(final User user, @Named("websafeConferenceKey") final String websafeConferenceKey) throws UnauthorizedException, NotFoundException {
+
+		// If not signed in, throw a 401 error.
+		if (user == null) {
+			throw new UnauthorizedException("Authorization required");
+		}
+		
+		final Key<Conference> conferenceKey = Key.create(websafeConferenceKey);
+
+		final Query<Session> query = ofy().load().type(Session.class).ancestor(conferenceKey).order("sessionName");
+		
+		return query.list();
+		
+	}
+	
+	@ApiMethod(name = "getConferenceSessionsByType", path = "getConferenceSessionsByType", httpMethod = HttpMethod.GET)
+	public Collection<Session> getConferenceSessionsByType(final User user, @Named("websafeConferenceKey") final String websafeConferenceKey, @Named("typeOfSession") final TypeOfSession typeOfSession) throws UnauthorizedException, NotFoundException {
+
+		// If not signed in, throw a 401 error.
+		if (user == null) {
+			throw new UnauthorizedException("Authorization required");
+		}
+		
+		final Key<Conference> conferenceKey = Key.create(websafeConferenceKey);
+
+		final Query<Session> query = ofy().load().type(Session.class).ancestor(conferenceKey).order("sessionName");
+		query.filter("typeOfSession =", typeOfSession);
+		
+		return query.list();
+		
+	}
+	
 }
